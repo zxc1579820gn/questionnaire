@@ -8,6 +8,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
+import javax.persistence.CascadeType;
+import javax.persistence.OneToMany;
 import javax.transaction.Transactional;
 
 
@@ -38,6 +40,7 @@ public class QuizServiceImpl implements QuizService{
 	
 
 	//Transactional:要馬全存要馬全不存
+	
 	@Transactional
 	@Override
 	public QuizRes create(QuizReq req) {
@@ -48,7 +51,7 @@ public class QuizServiceImpl implements QuizService{
 		int quid=qnDao.save(req.getQuestionnaire()).getId();
 		List<Question> quList = req.getQuestionList();
 		if (quList.isEmpty()) {//空List
-			System.out.println("空List"+"SUCCESSFUL");
+			System.out.println("List為空");
 			return new QuizRes(RtnCode.SUCCESSFUL);
 		}
 		//int quid=qnDao.findTopByOrderByIdDesc().getId();
@@ -89,21 +92,45 @@ public class QuizServiceImpl implements QuizService{
 		if (checkResult!=null) {
 			return checkResult;
 		}
-//		if (!qnDao.existsById(req.getQuestionnaire().getId())) {
-//			return new QuizRes(RtnCode.QUESTIONNAIRE_ID_NOT_FOUND);
-//		}
+		
+		if (!qnDao.existsById(req.getQuestionnaire().getId())) {
+			return new QuizRes(RtnCode.QUESTIONNAIRE_ID_NOT_FOUND);
+		}
 		Optional<Questionnaire> qnOp=qnDao.findById(req.getQuestionnaire().getId());
 		if (qnOp.isEmpty()) {
 			System.out.println("QUESTIONNAIRE_ID_NOT_FOUND");
 			return new QuizRes(RtnCode.QUESTIONNAIRE_ID_NOT_FOUND);
 		}
+		
+		
+
+		 
+		List<Question> quidsToDelete = quDao.findAllQuidsByqnId(req.getQuestionnaire().getId()); 
+		
+	    List<Integer> deleteQuIdList = new ArrayList<>();
+	    for (Question qu : quidsToDelete) {
+	        deleteQuIdList.add(qu.getQuid());
+	    }
+		//印出 deleteQuIdList 中的所有整數
+		System.out.print("deleteQuIdList: ");
+		for (Integer id : deleteQuIdList) {
+		    System.out.print(id + " ");
+		}
+		System.out.println();
+		
+		
+		
 		Questionnaire qn=qnOp.get();
 		//可修改條件:
 		//1.尚未發布: is_publish==false
 		//2.已發布但尚未進行:is_publish==true+當前時間小於start_date
 		if ( !qn.isPublished()||( qn.isPublished()&&LocalDate.now().isBefore( qn.getStartDate() ) ) ) {
+			if(!deleteQuIdList.isEmpty()) {
+				quDao.deleteAllByQnIdAndQuidIn(qn.getId(), deleteQuIdList);
+			}
 			qnDao.save(req.getQuestionnaire());
 			quDao.saveAll(req.getQuestionList());
+
 			System.out.println("SUCCESSFUL");
 			 return new QuizRes(RtnCode.SUCCESSFUL);
 		}
@@ -112,16 +139,26 @@ public class QuizServiceImpl implements QuizService{
 	}
 	private QuizRes checkQuestionnaireId(QuizReq req) {
 		if (req.getQuestionnaire().getId()<=0) {
-			System.out.println("QUESTIONNAIRE_ID_PARAM_ERROR");
+			System.out.println("QUESTIONNAIRE_ID_PARAM_ERROR_1");
 			return new QuizRes(RtnCode.QUESTIONNAIRE_ID_PARAM_ERROR);
 		}
 		List<Question> quList=req.getQuestionList();
 		 for(Question qu:quList) {
 			 if (qu.getqnId()!=req.getQuestionnaire().getId()) {
-				 System.out.println("QUESTIONNAIRE_ID_PARAM_ERROR");
+				 System.out.println("QUESTIONNAIRE_ID_PARAM_ERROR_2");
 				 return new QuizRes(RtnCode.QUESTIONNAIRE_ID_PARAM_ERROR);
 			}
 		 }
+		 List<Question>quDelList= req.getDeleteList();
+		 for(Question qu:quDelList) {
+			 if (qu.getqnId()!=req.getQuestionnaire().getId()) {
+				 System.out.println("QUESTIONNAIRE_ID_PARAM_ERROR_3");
+				 return new QuizRes(RtnCode.QUESTIONNAIRE_ID_PARAM_ERROR);
+			}
+		 }
+		 
+		 
+		 
 		 return null;
 	}
 	
@@ -129,21 +166,26 @@ public class QuizServiceImpl implements QuizService{
 	
 	@Transactional
 	@Override
+	@OneToMany(mappedBy = "questionnaire", cascade = CascadeType.REMOVE)
 	public QuizRes deletQuestionnaire(List<Integer> qnIdList) {
+//		System.out.println(qnIdList);
 		List<Questionnaire> qnList =qnDao.findByIdIn(qnIdList);
 		List<Integer> idList = new ArrayList<>();
 		for (Questionnaire qn:qnList) {
-			if (!qn.isPublished()||( qn.isPublished()&&LocalDate.now().isBefore( qn.getStartDate() ) ) ) {
+			if (!qn.isPublished()||( qn.isPublished()&&LocalDate.now().isBefore( qn.getStartDate() ) )|| ( qn.isPublished()&&LocalDate.now().isAfter( qn.getEndDate()) )|| ( qn.isPublished() && LocalDate.now().isEqual(qn.getEndDate()) )) {
 				//qnDao.deleteById(qn.getId());
 				idList.add(qn.getId());
+				System.out.println("時間正確");
 			}
 		}
 		if (!idList.isEmpty()) {
 			qnDao.deleteAllById(idList);//刪除問卷
 			quDao.deleteAllByQnIdIn(idList);//刪除題目
+			System.out.println("SUCCESSFUL");
+			return new QuizRes(RtnCode.SUCCESSFUL);
 		}
-		System.out.println("SUCCESSFUL");
-		return new QuizRes(RtnCode.SUCCESSFUL);
+		System.out.println("DELETE_ERROR");
+		return new QuizRes(RtnCode.DELETE_ERROR);
 	}
 		
 	@Transactional
@@ -171,13 +213,13 @@ public class QuizServiceImpl implements QuizService{
 		//三元運算子:變數=判斷式 ?true:false;
 		
 		title=StringUtils.hasText(title) ? title : "" ;
-		System.out.println("title: "+title);
+//		System.out.println("title: "+title);
 //		 if (!StringUtils.hasText(title)){title="";}
 		startDate= startDate==null  ?  LocalDate.of(1971,1,1):startDate ;
-		System.out.println("startDate: "+startDate);
+//		System.out.println("startDate: "+startDate);
 //		 if (startDate==null){startDate=LocalDate.of(1971,1,1);}
 		endDate= endDate==null ? LocalDate.of(2099,12,31):endDate ;
-		System.out.println("endDate: "+endDate);
+//		System.out.println("endDate: "+endDate);
 //		 if (endDate==null){endDate=LocalDate.of(2099,12,31);}
 		
 		List<Questionnaire> qnList=qnDao.findByTitleContainingAndStartDateGreaterThanEqualAndEndDateLessThanEqual(title,startDate, endDate);
@@ -203,13 +245,13 @@ public class QuizServiceImpl implements QuizService{
 			quizVoList.add(vo);
 		}
 		//顯示結果
-        for (QuizVo quizVo : quizVoList) {
-            System.out.println("問卷標題: " + quizVo.getQuestionnaire().getTitle()+" 問卷描述: "+ quizVo.getQuestionnaire().getDescription());
-        }
+//        for (QuizVo quizVo : quizVoList) {
+//            System.out.println("問卷標題: " + quizVo.getQuestionnaire().getTitle()+" 問卷描述: "+ quizVo.getQuestionnaire().getDescription());
+//        }
 		//顯示結果
-        for (Question quizVo : quList) {
-            System.out.println("問題標題: " + quizVo.getqTitle()+" 選項類型: "+ quizVo.getOptionType());
-        }
+//        for (Question quizVo : quList) {
+//            System.out.println("問題標題: " + quizVo.getqTitle()+" 選項類型: "+ quizVo.getOptionType());
+//        }
         
         
 
@@ -223,17 +265,17 @@ public class QuizServiceImpl implements QuizService{
 	@Override
 	public QuestionnaireRes searchQuestionnaireList(String title, LocalDate startDate, LocalDate endDate) {
 		title=StringUtils.hasText(title) ? title : "" ;
-		System.out.println("title: "+title);
+//		System.out.println("title: "+title);
 		startDate= startDate==null  ?  LocalDate.of(1971,1,1):startDate ;
-		System.out.println("startDate: "+startDate);
+//		System.out.println("startDate: "+startDate);
 		endDate= endDate==null ? LocalDate.of(2099,12,31):endDate ;
-		System.out.println("endDate: "+endDate);
+//		System.out.println("endDate: "+endDate);
 		List<Questionnaire> qnList=qnDao.findByTitleContainingAndStartDateGreaterThanEqualAndEndDateLessThanEqual(title,startDate, endDate);
 		
 		//顯示結果
-        for (Questionnaire quizVo : qnList) {
-            System.out.println("問卷標題: " + quizVo.getTitle()+" 問卷描述: "+ quizVo.getDescription());
-        }
+//        for (Questionnaire quizVo : qnList) {
+//            System.out.println("問卷標題: " + quizVo.getTitle()+" 問卷描述: "+ quizVo.getDescription());
+//        }
 		
 		return new QuestionnaireRes(qnList,RtnCode.SUCCESSFUL);
 	}
@@ -250,9 +292,9 @@ public class QuizServiceImpl implements QuizService{
 		List<Question> quList=quDao.findAllByQnId(qnId);
 		
 		//顯示結果
-        for (Question quizVo : quList) {
-            System.out.println("問題標題: " + quizVo.getqTitle()+" 選項類型: "+ quizVo.getOptionType());
-        }
+//        for (Question quizVo : quList) {
+//            System.out.println("問題標題: " + quizVo.getqTitle()+" 選項類型: "+ quizVo.getOptionType());
+//        }
 		
 		
 		return new QuestionRes(quList,RtnCode.SUCCESSFUL);
@@ -264,11 +306,11 @@ public class QuizServiceImpl implements QuizService{
 			boolean isAll) {
 		//可搜尋是否公開的問卷
 		title=StringUtils.hasText(title) ? title : "" ;
-		System.out.println("title: "+title);
+//		System.out.println("title: "+title);
 		startDate= startDate==null  ?  LocalDate.of(1971,1,1):startDate ;
-		System.out.println("startDate: "+startDate);
+//		System.out.println("startDate: "+startDate);
 		endDate= endDate==null ? LocalDate.of(2099,12,31):endDate ;
-		System.out.println("endDate: "+endDate);
+//		System.out.println("endDate: "+endDate);
 		//List<Questionnaire> qnList=qnDao.findByTitleContainingAndStartDateGreaterThanEqualAndEndDateLessThanEqual(title,startDate, endDate);
 		List<Questionnaire> qnList= new ArrayList<>();
 		if(!isAll) {
@@ -277,10 +319,25 @@ public class QuizServiceImpl implements QuizService{
 			qnList=qnDao.findByTitleContainingAndStartDateGreaterThanEqualAndEndDateLessThanEqual(title,startDate, endDate);
 		}
 		//顯示結果
-        for (Questionnaire quizVo : qnList) {
-            System.out.println("問卷標題: " + quizVo.getTitle()+" 問卷描述: "+ quizVo.getDescription()+" 是否公布: "+ quizVo.isPublished());
-        }
+//        for (Questionnaire quizVo : qnList) {
+//            System.out.println("問卷標題: " + quizVo.getTitle()+" 問卷描述: "+ quizVo.getDescription()+" 是否公布: "+ quizVo.isPublished());
+//        }
+        
+       
+        
 		return new QuestionnaireRes(qnList,RtnCode.SUCCESSFUL);
+	}
+	
+	
+	@Transactional
+	@Override
+	public QuestionnaireRes searchQuestionnaireById(int qnid) {
+		Optional<Questionnaire> qn=qnDao.findById(qnid);
+
+		//顯示結果
+//         System.out.println("問卷標題: " + qn.get().getTitle()+" 問卷描述: "+ qn.get().getDescription()+" 是否公布: "+ qn.get().isPublished());
+//         
+		 return new QuestionnaireRes(qn, RtnCode.SUCCESSFUL);
 	}
 
 

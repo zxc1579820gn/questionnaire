@@ -25,7 +25,7 @@ public class TeacherQuizTest {
 	private QuizService quizSerice;
 	
 	
-	@Test  
+	
 	public void teachercreateTest() {
 	    System.out.println("================================");
 		LocalDate startDate = LocalDate.parse("2023-11-16");

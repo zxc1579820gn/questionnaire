@@ -9,6 +9,8 @@ public enum RtnCode {
 	QUESTIONNAIRE_ID_PARAM_ERROR(400,"Questionnaire ID Param Error!"),//
 	QUESTIONNAIRE_ID_NOT_FOUND(404,"Questionnaire ID Not Found!"),//
 	UPDATE_ERROR(400,"Update Error!"),//
+	DELETE_ERROR(400,"DELETE_ERROR!"),//
+	QUESTIONNAIRE_NOT_FOUND(400,"QUESTIONNAIRE_NOT_FOUND"),//
 	
 	
 

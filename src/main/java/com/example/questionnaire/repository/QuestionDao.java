@@ -21,6 +21,8 @@ public interface QuestionDao extends JpaRepository<Question, QuestionId>{
 	public List<Question> findAllByQnIdIn(List<Integer> qnIds);
 
 	public List<Question> findAllByQnId(int qnId);
+
+	public List<Question> findAllQuidsByqnId(int qnId);
 	
 
 	

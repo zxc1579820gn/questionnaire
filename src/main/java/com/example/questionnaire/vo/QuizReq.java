@@ -5,16 +5,18 @@ import java.util.List;
 
 import com.example.questionnaire.entity.Question;
 import com.example.questionnaire.entity.Questionnaire;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class QuizReq {
+public class QuizReq extends QuizVo{
 	
 	private Questionnaire questionnaire;
 	
 //	private Question question;
 	
-	List<Question> QuestionList = new ArrayList<>();
-
 	
+	private List<Question> QuestionList = new ArrayList<>();
+
+	private List<Question>deleteList= new ArrayList<>();
 	
 	
 	
@@ -27,6 +29,20 @@ public class QuizReq {
 	public QuizReq() {
 		super();
 		// TODO Auto-generated constructor stub
+	}
+
+	
+	
+	
+	
+
+
+	public List<Question> getDeleteList() {
+		return deleteList;
+	}
+
+	public void setDeleteList(List<Question> deleteList) {
+		this.deleteList = deleteList;
 	}
 
 	public Questionnaire getQuestionnaire() {

@@ -2,6 +2,7 @@ package com.example.questionnaire.vo;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import com.example.questionnaire.constants.RtnCode;
 import com.example.questionnaire.entity.Question;
@@ -11,12 +12,20 @@ public class QuestionnaireRes {
 	
 	private List<Questionnaire> questionnaireList;
 	
+	private Optional<Questionnaire> questionnaire;
+	
 	private RtnCode rtnCode ;
 
 	
 	
 	
 	
+	public QuestionnaireRes(Optional<Questionnaire> questionnaire, RtnCode rtnCode) {
+		super();
+		this.questionnaire = questionnaire;
+		this.rtnCode = rtnCode;
+	}
+
 	public QuestionnaireRes(List<Questionnaire> questionnaireList, RtnCode rtnCode) {
 		super();
 		this.questionnaireList = questionnaireList;
@@ -26,6 +35,22 @@ public class QuestionnaireRes {
 	public QuestionnaireRes() {
 		super();
 		// TODO Auto-generated constructor stub
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+
+	public Optional<Questionnaire> getQuestionnaire() {
+		return questionnaire;
+	}
+
+	public void setQuestionnaire(Optional<Questionnaire> questionnaire) {
+		this.questionnaire = questionnaire;
 	}
 
 	public List<Questionnaire> getQuestionnaireList() {
