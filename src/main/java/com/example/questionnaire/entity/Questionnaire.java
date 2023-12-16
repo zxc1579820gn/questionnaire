@@ -32,9 +32,37 @@ public class Questionnaire {
 	
 	@Column(name="end_date")
 	private LocalDate endDate;
+	
+	@Column(name="is_private")
+	private boolean pvt;
 
 	
 	
+	public Questionnaire(int id, String title, String description, boolean published, LocalDate startDate,
+			LocalDate endDate, boolean pvt) {
+		super();
+		this.id = id;
+		this.title = title;
+		this.description = description;
+		this.published = published;
+		this.startDate = startDate;
+		this.endDate = endDate;
+		this.pvt = pvt;
+	}
+
+
+	public Questionnaire(String title, String description, boolean published, LocalDate startDate, LocalDate endDate,
+			boolean pvt) {
+		super();
+		this.title = title;
+		this.description = description;
+		this.published = published;
+		this.startDate = startDate;
+		this.endDate = endDate;
+		this.pvt = pvt;
+	}
+
+
 	public Questionnaire(String title, String description, boolean published, LocalDate startDate, LocalDate endDate) {
 		super();
 		this.title = title;
@@ -111,6 +139,17 @@ public class Questionnaire {
 	public void setEndDate(LocalDate endDate) {
 		this.endDate = endDate;
 	}
+
+
+	public boolean isPvt() {
+		return pvt;
+	}
+
+
+	public void setPvt(boolean pvt) {
+		this.pvt = pvt;
+	}
+	
 	
 	
 }

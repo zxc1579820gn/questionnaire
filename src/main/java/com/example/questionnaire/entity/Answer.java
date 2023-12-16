@@ -28,6 +28,15 @@ public class Answer {
 	    @Column(name = "question_type")
 	    private String questionType;
 	    
+	    @Column(name = "user_name")
+	    private String userName;
+	    
+	    @Column(name = "tel")
+	    private String tel;
+	    
+	    @Column(name = "email")
+	    private String email;
+	    
 	    
 	    
 	    
@@ -59,6 +68,22 @@ public class Answer {
 			this.qTitle = qTitle;
 			this.answer = answer;
 			this.questionType = questionType;
+		}
+		
+		
+
+		public Answer(int answerId, int qnId, int quId, String qTitle, String answer, String questionType,
+				String userName, String tel, String email) {
+			super();
+			this.answerId = answerId;
+			this.qnId = qnId;
+			this.quId = quId;
+			this.qTitle = qTitle;
+			this.answer = answer;
+			this.questionType = questionType;
+			this.userName = userName;
+			this.tel = tel;
+			this.email = email;
 		}
 
 		public Answer() {
@@ -114,7 +139,31 @@ public class Answer {
 			this.questionType = questionType;
 		}
 
+		public String getUserName() {
+			return userName;
+		}
 
+		public void setUserName(String userName) {
+			this.userName = userName;
+		}
+
+		public String getTel() {
+			return tel;
+		}
+
+		public void setTel(String tel) {
+			this.tel = tel;
+		}
+
+		public String getEmail() {
+			return email;
+		}
+
+		public void setEmail(String email) {
+			this.email = email;
+		}
+
+		
 
 
 	    

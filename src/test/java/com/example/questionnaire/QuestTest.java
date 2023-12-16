@@ -69,10 +69,10 @@ public class QuestTest {
 
 
 
-
+    
 	public void saveAnswerTest() {
 		System.out.println("================================");
-        Answer answer = new Answer(87,1,"zxc","zxc","zxc");
+        Answer answer = new Answer(135,1,"A","AAA","radio");
         answerService.saveAnswer(answer);
 		System.out.println("================================");
     }
@@ -214,8 +214,8 @@ public class QuestTest {
 		System.out.println("================================");
         // 步驟 1: 建立合理的測試數據
 		LocalDate localDate1 = LocalDate.parse("2023-11-30");
-		LocalDate localDate2 = LocalDate.parse("2023-12-02");
-        Questionnaire questionnaire = new Questionnaire("測試問卷", "測試描述文字",false, localDate1, localDate2);
+		LocalDate localDate2 = LocalDate.parse("2023-12-30");
+        Questionnaire questionnaire = new Questionnaire("記名測試問卷", "測試描述文字",true, localDate1, localDate2,false);
         
         int qnid=1;
      // 將 Arrays.asList 返回的列表轉換為可修改的 ArrayList
